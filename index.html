@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Ragna Lite Online - Sprite Edition</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+html,body{width:100%;height:100%;overflow:hidden;background:#0d0d12;font-family:Tahoma,sans-serif;touch-action:none;color:#fff}
+canvas#c{position:fixed;inset:0;display:block}
+.panel{background:rgba(15,20,35,0.85);border:1px solid #5a6a9a;border-radius:10px;backdrop-filter:blur(4px)}
+#hud{position:fixed;top:8px;left:8px;width:210px;padding:8px;font-size:12px;z-index:5}
+.bar{height:12px;background:#222;border-radius:6px;overflow:hidden;margin:3px 0;position:relative}
+.bar i{display:block;height:100%}
+.bar span{position:absolute;inset:0;font-size:9px;text-align:center;line-height:12px;text-shadow:0 0 2px #000}
+#mini{position:fixed;top:8px;right:8px;width:110px;height:110px;z-index:5}
+#menu{position:fixed;top:124px;right:8px;display:flex;flex-direction:column;gap:6px;width:110px;z-index:5}
+#menu button,.mb{background:linear-gradient(#3b4f8f,#24315e);color:#fff;border:1px solid #7b8fd0;border-radius:8px;padding:7px 4px;font-size:12px;font-family:inherit;cursor:pointer}
+#menu button.on{background:linear-gradient(#16a34a,#14532d)}
+#chat{position:fixed;left:8px;bottom:170px;width:min(60vw,320px);font-size:11px;pointer-events:none;z-index:5}
+#chat div{background:rgba(0,0,0,0.5);padding:2px 6px;margin-top:2px;border-radius:4px}
+#joy{position:fixed;left:24px;bottom:24px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,0.1);border:2px solid rgba(255,255,255,0.25);z-index:5}
+#knob{position:absolute;left:38px;top:38px;width:50px;height:50px;border-radius:50%;background:rgba(255,255,255,0.45);pointer-events:none}
+#acts{position:fixed;right:16px;bottom:16px;width:200px;height:200px;z-index:5}
+#acts button{position:absolute;border-radius:50%;border:2px solid rgba(255,255,255,0.5);color:#fff;font-weight:bold;font-family:inherit;font-size:10px;line-height:1.1}
+#bAtk{right:10px;bottom:10px;width:84px;height:84px;background:radial-gradient(#ef4444,#7f1d1d);font-size:15px!important}
+#bS1{right:105px;bottom:15px;width:58px;height:58px;background:radial-gradient(#f59e0b,#78350f)}
+#bS2{right:95px;bottom:85px;width:58px;height:58px;background:radial-gradient(#8b5cf6,#3b0764)}
+#bS3{right:25px;bottom:105px;width:58px;height:58px;background:radial-gradient(#22c55e,#14532d)}
+#bPot{right:150px;bottom:140px;width:46px;height:46px;background:radial-gradient(#f87171,#991b1b)}
+#banner{position:fixed;top:30%;left:50%;transform:translateX(-50%);font-size:22px;font-weight:bold;color:#ffd400;text-shadow:0 0 6px #000,0 0 12px #f00;pointer-events:none;text-align:center;opacity:0;transition:opacity .4s;width:90%;z-index:20}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;z-index:30}
+.modal .box{width:min(92vw,380px);padding:18px;text-align:center}
+.box h1{font-size:22px;color:#ffd400;margin-bottom:4px}
+.box input{width:100%;padding:10px;border-radius:8px;border:1px solid #7b8fd0;background:#0b1230;color:#fff;font-size:16px;margin:10px 0;user-select:text;-webkit-user-select:text}
+.jobs{display:flex;gap:6px;margin-bottom:6px}
+.jobs button{flex:1;padding:10px 4px;border-radius:8px;border:2px solid #444;background:#1e293b;color:#fff;font-family:inherit;font-size:12px;cursor:pointer}
+.jobs button.sel{border-color:#ffd400;background:#334155}
+.box .mb{width:100%;margin-top:8px;padding:11px;font-size:15px;cursor:pointer}
+.row{display:flex;justify-content:space-between;align-items:center;margin:10px 0;font-size:13px;gap:6px;text-align:left}
+.row .mb{width:auto;margin:0;padding:8px 10px;font-size:13px}
+.hide{display:none!important}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud" class="panel hide">
+ <div class="nm" id="hName"></div>
+ <div class="bar"><i id="hpB" style="background:#ef4444"></i><span id="hpT"></span></div>
+ <div class="bar"><i id="spB" style="background:#3b82f6"></i><span id="spT"></span></div>
+ <div class="bar"><i id="exB" style="background:#facc15"></i><span id="exT"></span></div>
+ <div id="hInfo"></div>
+</div>
+<canvas id="mini" class="panel hide" width="110" height="110"></canvas>
+<div id="menu" class="hide">
+ <button id="mAuto">🤖 AUTO: ปิด</button>
+ <button id="mBoss">👹 บอส</button>
+ <button id="mWoe">⚔️ วอกิลด์</button>
+ <button id="mShop">🛒 ร้านค้า</button>
+</div>
+<div id="chat"></div>
+<div id="joy" class="hide"><div id="knob"></div></div>
+<div id="acts" class="hide">
+ <button id="bAtk">⚔️<br>ตี</button>
+ <button id="bS1">S1</button><button id="bS2">S2</button><button id="bS3">Heal</button>
+ <button id="bPot">🧪<br>5</button>
+</div>
+<div id="banner"></div>
+
+<div id="start" class="modal"><div class="box panel">
+ <h1>⚔️ Ragna Lite (Sprite)</h1>
+ <div style="font-size:12px;opacity:.8">เวอร์ชันภาพสมจริงสไตล์ Ragnarok</div>
+ <input id="iName" maxlength="12" placeholder="ชื่อตัวละคร">
+ <div class="jobs">
+  <button data-j="Swordman" class="sel">🗡️<br>Swordman</button>
+  <button data-j="Mage">🔮<br>Mage</button>
+  <button data-j="Archer">🏹<br>Archer</button>
+ </div>
+ <button class="mb" id="bStart">เริ่มเกม</button>
+ <button class="mb hide" id="bCont"></button>
+</div></div>
+
+<div id="shop" class="modal hide"><div class="box panel">
+ <h1>🛒 ร้านค้า Prontera</h1>
+ <div id="sInfo" style="font-size:13px;margin:6px 0"></div>
+ <div class="row"><span>🧪 Red Potion (50z)</span><button class="mb" id="buy1">ซื้อ 1</button><button class="mb" id="buy10">ซื้อ 10</button></div>
+ <div class="row"><span id="refT"></span><button class="mb" id="bRef">⚒️ ตีบวก</button></div>
+ <div id="sMsg" style="min-height:18px;font-size:13px"></div>
+ <button class="mb" id="sClose">ปิด</button>
+</div></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const cv=$('c'),ctx=cv.getContext('2d'),mini=$('mini'),mctx=mini.getContext('2d');
+let W,H;function rs(){W=cv.width=innerWidth;H=cv.height=innerHeight}rs();addEventListener('resize',rs);
+const R=(a,b)=>Math.random()*(b-a)+a,D=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),pick=a=>a[Math.floor(Math.random()*a.length)];
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const CX=1600,CY=1600,FW=3200,TOWN=250,LAIR={x:2850,y:350};
+
+// โหลด Sprite จากฐานข้อมูล Ragnarok สาธารณะ (Emil's RO Sprite / RMS)
+const imgCache={};
+function loadImg(url){if(imgCache[url])return imgCache[url];const i=new Image();i.crossOrigin='anonymous';i.src=url;return imgCache[url]=i}
+
+// ลิงก์ภาพ Sprite มอนสเตอร์และตัวละคร (Pixel Art)
+const SPRITES={
+ poring: loadImg('https://static.divine-pride.net/images/mobs/item/1002.png'),
+ lunatic: loadImg('https://static.divine-pride.net/images/mobs/item/1063.png'),
+ wolf: loadImg('https://static.divine-pride.net/images/mobs/item/1013.png'),
+ orc: loadImg('https://static.divine-pride.net/images/mobs/item/1128.png'),
+ deviruchi: loadImg('https://static.divine-pride.net/images/mobs/item/1109.png'),
+ boss: loadImg('https://static.divine-pride.net/images/mobs/item/1150.png'), // Baphomet
+ Swordman: loadImg('https://static.divine-pride.net/images/mobs/item/1242.png'),
+ Mage: loadImg('https://static.divine-pride.net/images/mobs/item/1247.png'),
+ Archer: loadImg('https://static.divine-pride.net/images/mobs/item/1245.png')
+};
+
+const JOBS={
+ Swordman:{hp:160,sp:30,atk:14,def:6,range:40,color:'#3b82f6',spd:150,s1:'Bash',s2:'Magnum Break'},
+ Mage:{hp:95,sp:90,atk:19,def:2,range:170,color:'#a855f7',spd:140,s1:'Fire Bolt',s2:'Storm Gust'},
+ Archer:{hp:115,sp:55,atk:16,def:3,range:210,color:'#22c55e',spd:160,s1:'Double Strafe',s2:'Arrow Shower'}};
+const MOBS={
+ poring:{name:'Poring',lv:1,hp:45,atk:5,def:0,exp:10,z:[3,8],r:18,spd:50,passive:1},
+ lunatic:{name:'Lunatic',lv:6,hp:110,atk:11,def:2,exp:30,z:[8,18],r:18,spd:70,passive:1},
+ wolf:{name:'Wolf',lv:12,hp:260,atk:22,def:5,exp:75,z:[15,30],r:22,spd:95},
+ orc:{name:'Orc Warrior',lv:20,hp:520,atk:38,def:10,exp:160,z:[30,60],r:26,spd:80},
+ deviruchi:{name:'Deviruchi',lv:30,hp:900,atk:55,def:15,exp:320,z:[50,100],r:24,spd:100}};
+
+let P=null,units=[],fx=[],camX=0,camY=0,boss=null,bossTimer=30,autoHunt=false,selJob='Swordman';
+const needExp=lv=>Math.floor(40*Math.pow(lv,1.7));
+const inTown=u=>Math.hypot(u.x-CX,u.y-CY)<TOWN;
+function clampW(u){u.x=Math.max(u.r,Math.min(FW-u.r,u.x));u.y=Math.max(u.r,Math.min(FW-u.r,u.y))}
+function move(u,tx,ty,dt){const dx=tx-u.x,dy=ty-u.y,d=Math.hypot(dx,dy)||1,s=Math.min(d,u.spd*dt);u.x+=dx/d*s;u.y+=dy/d*s;clampW(u)}
+function log(m,c){const d=document.createElement('div');d.innerHTML=m;if(c)d.style.color=c;$('chat').appendChild(d);while($('chat').children.length>6)$('chat').firstChild.remove()}
+let bnT;function banner(m){const b=$('banner');b.textContent=m;b.style.opacity=1;clearTimeout(bnT);bnT=setTimeout(()=>b.style.opacity=0,2800)}
+function txt(x,y,s,c,big){fx.push({t:'txt',x,y,s,c,big,life:.9,max:.9})}
+const fmt=s=>{s=Math.max(0,Math.ceil(s));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
+function saveG(){if(P)localStorage.setItem('rlo_sprite',JSON.stringify({name:P.name,job:P.job,lv:P.lv,exp:P.exp,zeny:P.zeny,pots:P.pots,refine:P.refine}))}
+
+function recalc(p){const J=JOBS[p.job];p.mhp=Math.floor(J.hp*(1+(p.lv-1)*.15));p.msp=Math.floor(J.sp*(1+(p.lv-1)*.1));p.atk=Math.floor(J.atk+(p.lv-1)*2.5+p.refine*6);p.def=J.def+Math.floor(p.lv*.8);p.range=J.range;p.spd=J.spd}
+function makePlayer(name,job,s){const p={kind:'player',team:'f',name,job,x:CX,y:CY+80,r:18,lv:1,exp:0,zeny:300,pots:5,refine:0,acd:0,cds:[0,0,0],potcd:0,target:null,dest:null,dead:false};
+ if(s)Object.assign(p,{lv:s.lv,exp:s.exp,zeny:s.zeny,pots:s.pots,refine:s.refine});recalc(p);p.hp=p.mhp;p.sp=p.msp;return p}
+function bandType(x,y){const d=Math.hypot(x-CX,y-CY);return d<700?'poring':d<1100?'lunatic':d<1500?'wolf':d<2000?'orc':'deviruchi'}
+function spawnMob(){let x,y;do{x=R(60,FW-60);y=R(60,FW-60)}while(Math.hypot(x-CX,y-CY)<350);const k=bandType(x,y),M=MOBS[k];
+ units.push({kind:'mob',team:'h',type:k,name:M.name,lv:M.lv,x,y,hx:x,hy:y,r:M.r,hp:M.hp,mhp:M.hp,atk:M.atk,def:M.def,spd:M.spd,range:8,exp:M.exp,z:M.z,passive:!!M.passive,aggro:160,acd:0,aspd:1.3,wt:0,wx:x,wy:y})}
+function spawnBoss(){const lv=Math.max(25,P.lv+5),hp=6000+P.lv*400;
+ boss={kind:'boss',team:'h',type:'boss',name:'Baphomet',lv,x:LAIR.x,y:LAIR.y,hx:LAIR.x,hy:LAIR.y,r:32,hp,mhp:hp,atk:45+P.lv*2,def:12+Math.floor(P.lv/3),spd:80,range:12,aggro:260,acd:0,aspd:1.4,exp:1500+P.lv*80,z:[3000,5000],sk:5,wt:0,wx:LAIR.x,wy:LAIR.y};
+ units.push(boss);banner('⚠️ MVP Baphomet ปรากฏตัวแล้ว!');log('👹 Baphomet ปรากฏที่รังบอส (มุมขวาบน)','#f0abfc')}
+function initField(){units=[P];for(let i=0;i<60;i++)spawnMob()}
+
+function hit(a,b,mult=1){if(b.dead||a.dead)return;let dmg=Math.max(1,Math.floor(a.atk*mult*R(.85,1.15)-b.def));const cr=Math.random()<.1;if(cr)dmg=Math.floor(dmg*1.5);
+ b.hp-=dmg;if(a===P)b.byP=true;if(b.passive)b.provoked=true;if(!b.target||b.target.dead)b.target=a;
+ if(a===P||b===P||(Math.abs(b.x-P.x)<W/2+50&&Math.abs(b.y-P.y)<H/2+50))
+  txt(b.x+R(-10,10),b.y-b.r-10,(cr?'💥':'')+dmg,b===P?'#ff4d4d':a===P?(cr?'#fde047':'#fff'):'rgba(255,255,255,.55)',cr&&a===P);
+ if(b.hp<=0){b.dead=true;b.hp=0;if(b===P){P.target=null;log('💀 คุณตายแล้ว! เกิดใหม่ในเมือง','#f87171');setTimeout(()=>{P.dead=false;P.hp=P.mhp;P.x=CX;P.y=CY+80},2500);return}
+  if(b.byP&&b.exp){P.exp+=b.exp;const z=Math.floor(R(b.z[0],b.z[1]));P.zeny+=z;txt(b.x,b.y-24,`+${z} z`,'#fde047');
+   while(P.exp>=needExp(P.lv)){P.exp-=needExp(P.lv);P.lv++;recalc(P);P.hp=P.mhp;P.sp=P.msp;banner(`🎉 LEVEL UP! Lv.${P.lv}`);log(`🎉 เลเวลอัพ! Lv.${P.lv}`,'#ffd400')}saveG()}
+  if(b.kind==='boss')banner('🏆 Baphomet ถูกปราบแล้ว!')}}
+
+function nearestFoe(range){let b=null,bd=range;for(const u of units){if(u.dead||u.team==='f'||inTown(u))continue;const d=D(P,u);if(d<bd){bd=d;b=u}}return b}
+
+function attackBtn(){if(!P||P.dead)return;const t=nearestFoe(500);if(t){P.target=t;P.dest=null}else txt(P.x,P.y-45,'ไม่มีมอนสเตอร์ใกล้ๆ','#ccc')}
+function pot(){if(!P||P.dead||P.potcd>0)return;if(P.pots<=0){txt(P.x,P.y-45,'ยาหมด!','#fca5a5');return}P.pots--;P.potcd=.5;const h=Math.floor(P.mhp*.35);P.hp=Math.min(P.mhp,P.hp+h);txt(P.x,P.y-45,'+'+h,'#4ade80',1)}
+function skill(i){if(!P||P.dead)return;const J=JOBS[P.job],cost=[8,20,15][i];
+ if(P.cds[i]>0)return;if(P.sp<cost){txt(P.x,P.y-45,'SP ไม่พอ','#93c5fd');return}
+ if(i===0){const t=P.target&&!P.target.dead?P.target:nearestFoe(P.range+250);if(!t){txt(P.x,P.y-45,'ไม่มีเป้าหมาย','#ccc');return}
+  P.target=t;P.sp-=cost;P.cds[0]=1.5;txt(P.x,P.y-60,J.s1+'!','#fde047',1);hit(P,t,2.8)}
+ else if(i===1){P.sp-=cost;P.cds[1]=6;txt(P.x,P.y-60,J.s2+'!','#fde047',1);for(const o of units)if(!o.dead&&o.team!=='f'&&D(P,o)<170)hit(P,o,2)}
+ else{P.sp-=cost;P.cds[2]=8;const h=Math.floor(P.mhp*.3);P.hp=Math.min(P.mhp,P.hp+h);txt(P.x,P.y-60,'Heal +'+h,'#4ade80',1)}}
+function toggleAuto(){autoHunt=!autoHunt;$('mAuto').textContent=autoHunt?'🤖 AUTO: เปิด':'🤖 AUTO: ปิด';$('mAuto').classList.toggle('on',autoHunt)}
+
+const keys={},joy={x:0,y:0,id:null,cx:0,cy:0};
+function updP(dt){P.potcd=Math.max(0,P.potcd-dt);if(P.dead)return;P.acd-=dt;for(let i=0;i<3;i++)P.cds[i]=Math.max(0,P.cds[i]-dt);
+ const town=inTown(P);P.sp=Math.min(P.msp,P.sp+P.msp*(town?.1:.015)*dt);P.hp=Math.min(P.mhp,P.hp+P.mhp*(town?.12:.004)*dt);
+ if(autoHunt&&P.hp<P.mhp*.35&&P.pots>0)pot();
+ let mx=joy.x+((keys.d||keys.arrowright)?1:0)-((keys.a||keys.arrowleft)?1:0),my=joy.y+((keys.s||keys.arrowdown)?1:0)-((keys.w||keys.arrowup)?1:0);const m=Math.hypot(mx,my);
+ if(m>.1){if(m>1){mx/=m;my/=m}P.x+=mx*P.spd*dt;P.y+=my*P.spd*dt;clampW(P);P.target=null;P.dest=null;return}
+ if(P.target&&P.target.dead)P.target=null;
+ if(!P.target&&autoHunt&&!P.dest)P.target=nearestFoe(1200);
+ if(P.target){const t=P.target,d=D(P,t),reach=P.r+t.r+P.range;
+  if(d>reach)move(P,t.x,t.y,dt);
+  else{if(autoHunt&&P.cds[0]<=0&&P.sp>=30)skill(0);if(P.acd<=0&&!t.dead){P.acd=.75;hit(P,t)}}}
+ else if(P.dest){move(P,P.dest.x,P.dest.y,dt);if(D(P,P.dest)<5)P.dest=null}}
+
+let spawnT=0,saveT=5;
+function update(dt){updP(dt);
+ for(const u of units){if(u===P||u.dead)continue;
+  let t=u.target;if(t&&(t.dead||D(u,t)>250||inTown(t)))t=u.target=null;
+  if(!t&&!u.passive){for(const o of units){if(o.team==='f'&&!inTown(o)&&D(u,o)<u.aggro){t=u.target=o;break}}}
+  if(t){const d=D(u,t),reach=u.r+t.r+u.range;if(d>reach)move(u,t.x,t.y,dt);else{u.acd=(u.acd||0)-dt;if(u.acd<=0){u.acd=u.aspd;hit(u,t)}}}
+  else{u.wt=(u.wt||0)-dt;if(u.wt<=0){u.wt=R(3,6);u.wx=u.hx+R(-120,120);u.wy=u.hy+R(-120,120)}move(u,u.wx,u.wy,dt*.5)}}
+ units=units.filter(u=>!(u.dead&&(u.kind==='mob'||u.kind==='boss')));
+ spawnT-=dt;if(spawnT<=0&&units.filter(u=>u.kind==='mob').length<60){spawnMob();spawnT=.5}
+ if(!boss||boss.dead){bossTimer-=dt;if(bossTimer<=0)spawnBoss()}
+ for(const f of fx)f.life-=dt;fx=fx.filter(f=>f.life>0);saveT-=dt;if(saveT<=0){saveT=5;saveG()}}
+
+function label(s,x,y,c,f){ctx.font=f||'bold 11px Tahoma';ctx.textAlign='center';ctx.lineWidth=3;ctx.strokeStyle='rgba(0,0,0,.8)';ctx.strokeText(s,x,y);ctx.fillStyle=c;ctx.fillText(s,x,y)}
+function draw(){camX=P.x-W/2;camY=P.y-H/2;ctx.fillStyle='#2b4c2e';ctx.fillRect(0,0,W,H);
+ ctx.save();ctx.translate(-Math.round(camX),-Math.round(camY));
+ // พื้นเมือง Prontera
+ ctx.fillStyle='#d4be94';ctx.beginPath();ctx.arc(CX,CY,TOWN,0,7);ctx.fill();
+ ctx.strokeStyle='#8c734e';ctx.lineWidth=8;ctx.stroke();
+ ctx.fillStyle='#38bdf8';ctx.beginPath();ctx.arc(CX,CY,45,0,7);ctx.fill();
+ label('PRONTERA (Safe Zone)',CX,CY-TOWN+30,'#fff','bold 15px Tahoma');
+
+ // เรนเดอร์ตัวละครและมอนสเตอร์ด้วย Sprite ภาพจริง
+ for(const u of units.filter(u=>!u.dead).sort((a,b)=>a.y-b.y)){
+  const x=u.x,y=u.y,img=SPRITES[u.kind==='player'?P.job:(u.kind==='boss'?'boss':u.type)];
+  ctx.fillStyle='rgba(0,0,0,.3)';ctx.beginPath();ctx.ellipse(x,y+u.r*.5,u.r,u.r*.4,0,0,7);ctx.fill();
+  if(img&&img.complete&&img.naturalWidth>0){
+   const sz=u.r*2.6;ctx.drawImage(img,x-sz/2,y-sz*0.8,sz,sz);
+  }else{
+   ctx.fillStyle=u.color||'#fff';ctx.beginPath();ctx.arc(x,y-u.r,u.r,0,7);ctx.fill();
+  }
+  const top=y-u.r*1.8;
+  label(u.kind==='mob'||u.kind==='boss'?`${u.name} Lv.${u.lv}`:u.name,x,top-6,u===P?'#fde047':u.kind==='boss'?'#f0abfc':'#fff');
+  if(u.hp<u.mhp||u.kind==='boss'){const w=u.kind==='boss'?80:34;ctx.fillStyle='#000';ctx.fillRect(x-w/2-1,top+2,w+2,5);ctx.fillStyle='#ef4444';ctx.fillRect(x-w/2,top+3,w*(u.hp/u.mhp),3)}
+ }
+ for(const f of fx){const a=f.life/f.max;ctx.globalAlpha=Math.min(1,a*1.6);label(f.s,f.x,f.y-(1-a)*35,f.c,f.big?'bold 16px Tahoma':'bold 13px Tahoma')}
+ ctx.globalAlpha=1;ctx.restore();
+
+ // Minimap
+ mctx.clearRect(0,0,110,110);mctx.fillStyle='rgba(212,190,148,.7)';mctx.beginPath();mctx.arc(CX*(110/FW),CY*(110/FW),TOWN*(110/FW),0,7);mctx.fill();
+ for(const u of units){if(u.dead)continue;mctx.fillStyle=u===P?'#fff':u.kind==='boss'?'#f0f':'#ef4444';mctx.fillRect(u.x*(110/FW)-1,u.y*(110/FW)-1,2,2)}
+}
+
+function updHUD(){$('hName').textContent=`${P.name} Lv.${P.lv} ${P.job}`;
+ $('hpB').style.width=Math.max(0,P.hp/P.mhp*100)+'%';$('hpT').textContent=`HP ${Math.ceil(P.hp)}/${P.mhp}`;
+ $('spB').style.width=Math.max(0,P.sp/P.msp*100)+'%';$('spT').textContent=`SP ${Math.ceil(P.sp)}/${P.msp}`;
+ const ne=needExp(P.lv);$('exB').style.width=(P.exp/ne*100)+'%';$('exT').textContent=`EXP ${(P.exp/ne*100).toFixed(1)}%`;
+ $('hInfo').innerHTML=`💰 ${P.zeny.toLocaleString()}z | ⚒️+${P.refine}`;$('bPot').innerHTML=`🧪<br>${P.pots}`;
+ const J=JOBS[P.job],nm=[J.s1,J.s2,'Heal'];['bS1','bS2','bS3'].forEach((id,i)=>{const c=P.cds[i];$(id).innerHTML=c>0?c.toFixed(1):nm[i]});
+ $('mBoss').textContent=boss&&!boss.dead?'👹 บอส: เกิดแล้ว!':`👹 บอส ${fmt(bossTimer)}`;
+}
+
+// Controls
+const jz=$('joy'),kn=$('knob');
+function jm(t){let dx=t.clientX-joy.cx,dy=t.clientY-joy.cy,d=Math.hypot(dx,dy),m=50;if(d>m){dx=dx/d*m;dy=dy/d*m}kn.style.transform=`translate(${dx}px,${dy}px)`;joy.x=dx/m;joy.y=dy/m}
+jz.addEventListener('touchstart',e=>{e.preventDefault();const t=e.changedTouches[0];joy.id=t.identifier;const r=jz.getBoundingClientRect();joy.cx=r.left+r.width/2;joy.cy=r.top+r.height/2;jm(t)},{passive:false});
+jz.addEventListener('touchmove',e=>{e.preventDefault();for(const t of e.changedTouches)if(t.identifier===joy.id)jm(t)},{passive:false});
+const je=e=>{for(const t of e.changedTouches)if(t.identifier===joy.id){joy.id=null;joy.x=joy.y=0;kn.style.transform='translate(0,0)'}};
+jz.addEventListener('touchend',je);jz.addEventListener('touchcancel',je);
+
+cv.addEventListener('pointerdown',e=>{if(!P||P.dead)return;const wx=e.clientX+camX,wy=e.clientY+camY;let best=null,bd=40;
+ for(const u of units){if(u.dead||u.team==='f')continue;const d=Math.hypot(u.x-wx,u.y-wy)-u.r;if(d<bd){bd=d;best=u}}if(best){P.target=best;P.dest=null}else{P.dest={x:wx,y:wy};P.target=null}});
+const tap=(id,f)=>$(id).addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();f()});
+tap('bAtk',attackBtn);tap('bS1',()=>skill(0));tap('bS2',()=>skill(1));tap('bS3',()=>skill(2));tap('bPot',pot);
+$('mAuto').onclick=toggleAuto;
+$('mBoss').onclick=()=>{if(!P)return;if(boss&&!boss.dead){P.x=LAIR.x-200;P.y=LAIR.y+200;log('🌀 วาร์ปไปรังบอส','#c4b5fd')}else log(`👹 บอสจะเกิดใน ${fmt(bossTimer)}`)};
+$('mShop').onclick=()=>{if(!inTown(P)){log('⚠️ ต้องอยู่ในเมือง Prontera ถึงจะเปิดร้านค้าได้');return}$('shop').classList.remove('hide')}
+$('buy1').onclick=()=>{if(P.zeny<50)return;P.zeny-=50;P.pots++;$('sMsg').textContent='ซื้อยาแล้ว'};
+$('buy10').onclick=()=>{if(P.zeny<450)return;P.zeny-=450;P.pots+=10;$('sMsg').textContent='ซื้อยา x10 แล้ว'};
+$('bRef').onclick=()=>{
+ const c=200*(P.refine+1)*(P.refine+1);if(P.zeny<c){$('sMsg').textContent='Zeny ไม่พอ';return}P.zeny-=c;
+ if(Math.random()<((P.refine<4)?1:.7)){P.refine++;$('sMsg').textContent=`✨ ตีบวก +${P.refine} สำเร็จ!`}else{P.refine=Math.max(0,P.refine-1);$('sMsg').textContent=`💥 แตก! เหลือ +${P.refine}`}recalc(P)
+};
+$('sClose').onclick=()=>$('shop').classList.add('hide');
+
+document.querySelectorAll('.jobs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.jobs button').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');selJob=b.dataset.j});
+const sv=JSON.parse(localStorage.getItem('rlo_sprite')||'null');
+if(sv){$('bCont').classList.remove('hide');$('bCont').textContent=`▶️ เล่นต่อ: ${sv.name} Lv.${sv.lv}`;$('bCont').onclick=()=>begin(sv.name,sv.job,sv)}
+$('bStart').onclick=()=>begin($('iName').value.trim()||'Novice'+Math.floor(R(100,999)),selJob,null);
+function begin(name,job,s){P=makePlayer(name,job,s);initField();['hud','mini','menu','joy','acts'].forEach(i=>$(i).classList.remove('hide'));$('start').classList.add('hide');log(`ยินดีต้อนรับ <b>${esc(name)}</b>`,'#ffd400')}
+
+let lastT=0,hudT=0;
+function loop(ts){const dt=Math.min(.05,(ts-lastT)/1000||0);lastT=ts;if(P){update(dt);draw();hudT-=dt;if(hudT<=0){hudT=.1;updHUD()}}requestAnimationFrame(loop)}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
